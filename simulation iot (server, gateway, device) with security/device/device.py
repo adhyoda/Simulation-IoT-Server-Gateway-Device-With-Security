@@ -3,19 +3,19 @@ import random
 import time
 import paho.mqtt.client as mqtt
 from datetime import datetime
+import os
 
 # MQTT Configuration
 BROKER_URL = "broker.emqx.io"
 PORT = 1883
 
-TOPIC_GTD = "koica-iot-yugi-GTD"  # Gateway -> Device
-TOPIC_DTG = "koica-iot-yugi-DTG"  # Device -> Gateway
+TOPIC_GTD = "koica-iot-U1-GTD"  # Gateway -> Device
+TOPIC_DTG = "koica-iot-U1-DTG"  # Device -> Gateway
+TOPIC_STG = "koica-iot-U1-STG"  # 🔴 TAMBAHKAN: Server -> Gateway/Device (Management)
 
 # ==========================
 # Load Device Configuration
 # ==========================
-import os
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CONFIG_FILE = os.path.join(
@@ -57,9 +57,9 @@ def on_connect(client, userdata, flags, rc):
         print(f"✅ Connected as {DEVICE_ID}")
 
         client.subscribe(TOPIC_GTD)
+        client.subscribe(TOPIC_STG)  # 🔴 TAMBAHKAN: Device ikut subscribe ke topik manajemen server
 
-        print(f"Subscribed: {TOPIC_GTD}")
-
+        print(f"Subscribed: {TOPIC_GTD} & {TOPIC_STG}")
     else:
         print(f"❌ Connection failed: {rc}")
 
@@ -67,20 +67,39 @@ def on_message(client, userdata, message):
     global AUTH_TOKEN
 
     try:
-        msg = message.payload.decode()
+        msg_payload = message.payload.decode()
 
-        # --------------------------
-        # Command from Gateway
-        # --------------------------
+        # 🔴 HANDLE UPDATE DARI SERVER
+        if message.topic == TOPIC_STG:
+            data = json.loads(msg_payload)
+            action = data.get("action")
+            dev_id = data.get("device_id")
+            
+            if dev_id == DEVICE_ID:
+                if action == "SET_DEVICE":
+                    new_token = data.get("token")
+                    if new_token and new_token != AUTH_TOKEN:
+                        AUTH_TOKEN = new_token
+                        save_config()
+                        print(f"⚙️ [Remote Config] Token diperbarui otomatis: {AUTH_TOKEN}")
+                        
+                # 🔴 TAMBAHKAN KONDISI INI:
+                elif action == "DELETE_DEVICE":
+                    AUTH_TOKEN = "" # Kosongkan token di memori
+                    save_config()   # Kosongkan token di device_config.json
+                    print(f"⚠️ [Remote Config] DEVICE TELAH DIHAPUS OLEH SERVER! Token dikosongkan.")
+            return
+
+        # 🟢 2. HANDLE KODE LAMA LU (POLLING DARI GATEWAY)
         if message.topic == TOPIC_GTD:
 
-            if msg == "CMD;SEND_DATA":
+            if msg_payload == "CMD;SEND_DATA":
 
                 sensor = generate_sensor_data()
 
                 payload = {
                     "device_id": DEVICE_ID,
-                    "token": AUTH_TOKEN,
+                    "token": AUTH_TOKEN, # Menggunakan token terbaru
                     "temp": sensor["temp"],
                     "hum": sensor["hum"],
                     "lux": sensor["lux"],

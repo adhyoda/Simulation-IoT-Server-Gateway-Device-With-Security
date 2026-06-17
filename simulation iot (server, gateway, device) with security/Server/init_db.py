@@ -15,6 +15,9 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
+    # ---------------------------------------------------
+    # 🟢 STRUKTUR INI SUDAH SEMPURNA (TIDAK PERLU DIUBAH)
+    # ---------------------------------------------------
     cur.execute("""
         CREATE TABLE IF NOT EXISTS devices (
             id TEXT PRIMARY KEY,
@@ -39,13 +42,15 @@ def init_db():
         )
     """)
 
+    # 🟢 Optional: Sesuaikan token awal di sini biar sama dengan 'init_gateway_db.py'
+    # Jadi saat pertama kali sistem dinyalakan, gemboknya langsung klop semua.
     devices = [
 
         (
             "node_D1109",
             "Cloud Big Data Classroom",
             "gw_001",
-            "token123"
+            "token123"  # Pastikan sama dengan token awal di gateway & device_config.json
         ),
 
         (

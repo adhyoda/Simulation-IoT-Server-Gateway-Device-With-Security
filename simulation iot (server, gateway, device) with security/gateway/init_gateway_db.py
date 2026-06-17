@@ -26,11 +26,12 @@ def init_db():
     # ----------------------
     # DEVICE REGISTRY
     # ----------------------
-
+    # 🔴 MODIFIKASI: Ditambahkan kolom auth_token TEXT
     cur.execute("""
         CREATE TABLE IF NOT EXISTS devices (
             id TEXT PRIMARY KEY,
             description TEXT,
+            auth_token TEXT,
             status TEXT DEFAULT 'offline',
             last_seen TEXT
         )
@@ -57,19 +58,21 @@ def init_db():
     """)
 
     # ----------------------
-    # REGISTER DEVICES
+    # REGISTER INITIAL DEVICES
     # ----------------------
-
+    # 🔴 MODIFIKASI: Ditambahkan token bawaan awal biar sinkron sama database server
     devices = [
 
         (
             "node_D1109",
-            "Cloud Big Data Classroom"
+            "Cloud Big Data Classroom",
+            "token123"
         ),
 
         (
             "node_D1110",
-            "Smart Factory Classroom"
+            "Smart Factory Classroom",
+            "token456"
         )
 
     ]
@@ -77,13 +80,14 @@ def init_db():
     for device in devices:
 
         cur.execute("""
-            INSERT OR IGNORE
+            INSERT OR REPLACE
             INTO devices
             (
                 id,
-                description
+                description,
+                auth_token
             )
-            VALUES (?, ?)
+            VALUES (?, ?, ?)
         """, device)
 
     conn.commit()
