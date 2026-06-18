@@ -265,17 +265,6 @@ Potential enhancements include:
 ## 👨‍💻 Author
 
 ### Adhyoda
-
-Physics Student | Graphic Designer | Aspiring Art Director & Producer
-
-Areas of Interest:
-
-* Internet of Things (IoT)
-* Cybersecurity
-* Edge Computing
-* Machine Learning
-* Creative Technology
-
 GitHub: https://github.com/adhyoda
 
 ---
